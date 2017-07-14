@@ -13,7 +13,7 @@ if len(sys.argv)>1:
     directionMotor1 = sys.argv[1]
     directionMotor2 = sys.argv[2]
 else:
-    print "param direction missing"
+    print ("param direction missing")
 
 # Define GPIO Signals to use
 # Physical Pins used:
@@ -24,12 +24,12 @@ StepMotorPins2 = [23,24,25,4]
 
 # Set all pins as output
 for pin in StepMotorPins1:
-    print "Setup pin %s of motor 1" %(pin)
+    print ("Setup pin %s of motor 1" %(pin))
     GPIO.setup(pin,GPIO.OUT)
     GPIO.output(pin, False)
 
 for pin in StepMotorPins2:
-    print "Setup pin %s of motor2" %(pin)
+    print ("Setup pin %s of motor2" %(pin))
     GPIO.setup(pin,GPIO.OUT)
     GPIO.output(pin,False)
 
@@ -163,9 +163,9 @@ for i in range (2056):
     try:
         StepMotor1();
         StepMotor2();
-        print i
+        print (i)
     except KeyboardInterrupt:
-        print "stopped"
+        print ("stopped")
         GPIO.cleanup()
         exit(0);
 
