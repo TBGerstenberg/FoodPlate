@@ -3,6 +3,7 @@ import signal
 from time import sleep
 import RPi.GPIO as GPIO
 import threading
+import logging
 
 
 class Stepper:
@@ -29,18 +30,18 @@ class Stepper:
         self.isTurning = True
         while self.isTurning and self.turnCount < self.turnLimit:
 
-            if(self.direction == "L"):
+            if (self.direction == "L"):
                 self.turn(self.P1, self.P2, self.P3, self.P4)
             else:
                 self.turn(self.P4, self.P3, self.P2, self.P1)
-            
-            #print("moving" + self.name + ": " + str(self.turnCount) + " steps")
+
+            print(self.name + "at step :  " + str(self.turnCount))
 
     def stop(self):
         self.isTurning = False
 
     def turn(self, A, B, C, D):
-        
+
         # Step1
         GPIO.output(D, True)
         sleep(self.stepdelay)
@@ -110,8 +111,8 @@ if __name__ == "__main__":
     pins = motor1.pins + motor2.pins
 
     for pin in pins:
-            GPIO.setup(pin, GPIO.OUT)
-            GPIO.output(pin, False)
+        GPIO.setup(pin, GPIO.OUT)
+        GPIO.output(pin, False)
 
     try:
         motor1Thread = threading.Thread(target=motor1.run)
@@ -125,7 +126,7 @@ if __name__ == "__main__":
 
         GPIO.cleanup()
         exit(0)
-        
+
     except KeyboardInterrupt:
 
         print "stopped"
@@ -133,4 +134,3 @@ if __name__ == "__main__":
         motor2.stop()
         GPIO.cleanup()
         exit(0)
-
