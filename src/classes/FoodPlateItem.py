@@ -2,11 +2,19 @@ import datetime
 import iso8601
 
 class FoodPlateItem():
+    
+    def __init__(self, expirationDate, expirationDateTimestamp, name, positionAngle, center):
+        
+        self.expirationDate = expirationDate
+        self.expirationDateTimestamp = expirationDateTimestamp
+        self.name = name
+        self.positionAngle = positionAngle
+        self.center = center
 
-	def __init__(self):
-		
-		self.expirationDate = "2007-01-25T12:00:00Z"
-		self.name = "Marmelade"
-		self.positionAngles = 45
-        self.center = (531,546)
+    def setPositionAngle(self,positionAngle):
+        self.positionAngle = positionAngle
+
+
+    def setCenter(self,center):
+        self.center = center
 

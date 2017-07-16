@@ -1,5 +1,5 @@
 from classes.StepperController import StepperController
-# from classes.FoodPlate import FoodPlate
+from classes.FoodPlateItem import FoodPlateItem
 from classes.ProductDetector import ProductDetector
 from classes.Camera import Camera
 
@@ -7,6 +7,11 @@ from time import sleep
 
 if __name__ == "__main__":
 
+    """
+    Create Default FoodPlate Items
+    """
+    
+    
     print("FoodPlate is now active")
 
     camera = Camera()
@@ -16,6 +21,7 @@ if __name__ == "__main__":
     
     productDetector = ProductDetector()
     productDetector.detectProducts(image)
+
 
 
     #sp = StepperController()

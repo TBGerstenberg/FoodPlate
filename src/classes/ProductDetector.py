@@ -2,6 +2,8 @@
 import numpy as np
 import cv2
 import argparse
+from classes.FoodPlate import FoodPlate
+from classes.FoodPlateItem import FoodPlateItem
 
 # import the necessary packages
 
@@ -17,8 +19,16 @@ class ProductDetector():
     
     def detectProducts(self, imageToScan):
 
+        #boundaries = [([118, 114, 111], [130, 120, 118])]
+    
+              
         # load the image
         imageOrig = cv2.imread("/home/pi/Projects/FoodPlate/images/raw_input/input.jpg")
+        
+        
+        # show the images
+        cv2.imwrite(self.imageWritePath + "test.jpg", imageOrig)
+        
         
         # Crop from x, y, w, h -> 100, 200, 300, 400
         image = imageOrig[0:1080, 275:1670]
@@ -41,12 +51,12 @@ class ProductDetector():
         # construct and apply a closing kernel to 'close' gaps between 'white'
         # pixels
 
-        kernel = np.ones((1, 5), np.uint8)
+        kernel = np.ones((1, 8), np.uint8)
         erosion = cv2.dilate(edged, kernel, iterations=2)
 
         cv2.imwrite(self.imageWritePath + "3_dilated.jpg", erosion)
 
-        kernel2 = np.ones((1, 5), np.uint8)
+        kernel2 = np.ones((1, 8), np.uint8)
         erosion2 = cv2.erode(erosion, kernel2, iterations=2)
 
         cv2.imwrite(self.imageWritePath + "4_eroded.jpg", erosion2)
@@ -77,6 +87,7 @@ class ProductDetector():
                                      cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         total = 0
 
+        foodPlate = FoodPlate()
         # loop over the contours
         for c in cnts:
 
@@ -95,7 +106,28 @@ class ProductDetector():
             if radius < 500 and radius > 30:
                 # and draw the circle in blue
                 cv2.circle(original, center, radius, (255, 0, 0), 2)
+                
+                foodPlateItem = FoodPlateItem("2007-01-25T12:00:00Z",1169722800,"Marmelade",radius,center)
+                foodPlate.addItem(foodPlateItem.expirationDateTimestamp)
+                
                 total += 1
                 print("radius:" + str(radius))
 
+            print("FootPlate Items Array:",foodPlate.Items)
             cv2.imwrite(self.imageWritePath + "final_output.jpg", original)
+
+
+
+    def setFoodPlateItems():
+    
+        foodPlateItem1 = FoodPlateItem("2007-01-25T12:00:00Z",1169722800,"Marmelade",0,())
+        foodPlateItem2 = FoodPlateItem("2009-05-21T12:00:00Z",1242900000,"Erbsen",0,())
+        foodPlateItem3 = FoodPlateItem("2008-02-21T12:00:00Z",1203591600,"Knoblauch",0,())
+        foodPlateItem4 = FoodPlateItem("2011-03-10T12:00:00Z",1299754800,"Thunfisch",0,())
+        foodPlateItem5 = FoodPlateItem("2012-08-29T12:00:00Z",1346234400,"Majonnaise",0,())
+
+
+
+
+
+
