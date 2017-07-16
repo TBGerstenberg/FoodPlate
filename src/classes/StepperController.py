@@ -53,7 +53,7 @@ class StepperController():
         return 8.333333 * angle
 
     def cleanup(self):
-        print "Motors stopped and pins freed up"
+        print ("Motors stopped and pins freed up")
         self.stepper1.stop()
         self.stepper2.stop()
         GPIO.cleanup()

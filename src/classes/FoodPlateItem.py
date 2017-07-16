@@ -8,4 +8,5 @@ class FoodPlateItem():
 		self.expirationDate = "2007-01-25T12:00:00Z"
 		self.name = "Marmelade"
 		self.positionAngles = 45
+        self.center = (531,546)
 
