@@ -24,5 +24,5 @@ if __name__ == "__main__":
 
 
 
-    #sp = StepperController()
-    #sp.turn(90, "L")
+    sp = StepperController()
+    sp.turn(90, "L")

@@ -1,5 +1,6 @@
 import cv2
 import collections
+from classes.Node import UnorderedList
 from Camera import Camera
 import math
 import cmath
@@ -20,21 +21,29 @@ class FoodPlate():
     def __init__(self):
         #self.camera = Camera()
         self.mostRecentImage = None
-        self.items = collections.deque()
+        self.items = UnorderedList()
 
-        """
-        Adds an Item to the FoodPlate
-        """
-
+    def getItem(self,item):
+        self.items.getItem(item)
+        
+    """
+    Adds an Item to the FoodPlate
+    """
+    
     def addItem(self, item):
-        self.items.append(item)
-
-        """
-        Removes an Item from the FoodPlate
-        """
+        self.items.addItem(item)
+        
+    """
+    Removes an Item from the FoodPlate
+    """
 
     def removeItem(self, item):
-        self.items.remove(item)
+        self.remove(item)
+    
+    
+    def size(self):
+        self.size()
+
 
     """
     Turns an Item on the FoodPlate so that it faces a towards a person opening a the fridge.

@@ -8,7 +8,7 @@ from classes.FoodPlateItem import FoodPlateItem
 # import the necessary packages
 
 
-
+foodPlate = FoodPlate()
 class ProductDetector():
 
 
@@ -16,6 +16,7 @@ class ProductDetector():
 
         self.imageReadPath = "/home/pi/Projects/FoodPlate/images/raw_input/"
         self.imageWritePath = "/home/pi/Projects/FoodPlate/images/processed_output/"
+        self.foundItems = {}
     
     def detectProducts(self, imageToScan):
 
@@ -67,6 +68,7 @@ class ProductDetector():
         cv2.imwrite(self.imageWritePath + "5_closed.jpg", closed2)
 
         self.findContours(image,closed2)
+        self.drawNames(image,closed2)
 
     def auto_canny(self, image, sigma=0.99):
 
@@ -87,7 +89,6 @@ class ProductDetector():
                                      cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         total = 0
 
-        foodPlate = FoodPlate()
         # loop over the contours
         for c in cnts:
 
@@ -99,7 +100,7 @@ class ProductDetector():
             print "center:" + str(tuple(center))
 
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(original, '.', (750, 520), font, 1, (255, 255, 255), 2)
+            cv2.putText(original, '.', (795, 530), font, 1, (255, 255, 255), 2)
 
             radius = int(radius)
 
@@ -107,24 +108,63 @@ class ProductDetector():
                 # and draw the circle in blue
                 cv2.circle(original, center, radius, (255, 0, 0), 2)
                 
-                foodPlateItem = FoodPlateItem("2007-01-25T12:00:00Z",1169722800,"Marmelade",radius,center)
-                foodPlate.addItem(foodPlateItem.expirationDateTimestamp)
-                
                 total += 1
+                self.foundItems["foodPlateItem"+str(total)] = [center,radius]
+                
                 print("radius:" + str(radius))
-
-            print("FootPlate Items Array:",foodPlate.Items)
-            cv2.imwrite(self.imageWritePath + "final_output.jpg", original)
-
+            
+        self.setFoodPlateItems()
 
 
-    def setFoodPlateItems():
+
+    def drawNames(self,original,image):
+    
+        (cnts, _) = cv2.findContours(image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        total = 0
+        # loop over the contours
+        for c in cnts:
+            
+            # finally, get the min enclosing circle
+            (x, y), radius = cv2.minEnclosingCircle(c)
+            # convert all values to int
+            center = (int(x), int(y))
+            
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            
+            radius = int(radius)
+            
+            if radius < 500 and radius > 30:
+                # and draw the circle in blue
+                if(total <= foodPlate.items.size()-1):
+                    cv2.putText(original, foodPlate.items.getItem(total).name, center, font, 1, (255, 255, 255), 2)
+                total += 1
+        cv2.imwrite(self.imageWritePath + "final_output.jpg", original)
+
+    def setFoodPlateItems(self):
     
         foodPlateItem1 = FoodPlateItem("2007-01-25T12:00:00Z",1169722800,"Marmelade",0,())
         foodPlateItem2 = FoodPlateItem("2009-05-21T12:00:00Z",1242900000,"Erbsen",0,())
         foodPlateItem3 = FoodPlateItem("2008-02-21T12:00:00Z",1203591600,"Knoblauch",0,())
         foodPlateItem4 = FoodPlateItem("2011-03-10T12:00:00Z",1299754800,"Thunfisch",0,())
         foodPlateItem5 = FoodPlateItem("2012-08-29T12:00:00Z",1346234400,"Majonnaise",0,())
+        foodPlateItem6 = FoodPlateItem("2013-04-13T12:00:00Z",1365847200,"Kaffeedose",0,())
+        
+        for item,value in self.foundItems.items():
+            
+            eval(item).setPositionAngle(value[1])
+            eval(item).setCenter(value[0])
+        
+        foodPlate.addItem(foodPlateItem1)
+        foodPlate.addItem(foodPlateItem2)
+        foodPlate.addItem(foodPlateItem3)
+        foodPlate.addItem(foodPlateItem4)
+        foodPlate.addItem(foodPlateItem5)
+        foodPlate.addItem(foodPlateItem6)
+        
+        print(foodPlate.items.size())
+#print(foodPlate.items.getItem(2).__dict__)
+
 
 
 

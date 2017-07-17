@@ -10,11 +10,13 @@ class FoodPlateItem():
         self.name = name
         self.positionAngle = positionAngle
         self.center = center
-
+    
     def setPositionAngle(self,positionAngle):
         self.positionAngle = positionAngle
-
-
+    
+    
     def setCenter(self,center):
         self.center = center
-
+    
+    def getName(self):
+        return self.name
