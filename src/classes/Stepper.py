@@ -31,11 +31,13 @@ class Stepper:
         while self.isTurning and self.turnCount < self.turnLimit:
 
             if (self.direction == "L"):
-                self.turn(self.P1, self.P2, self.P3, self.P4)
-            else:
                 self.turn(self.P4, self.P3, self.P2, self.P1)
 
-            print(self.name + "at step :  " + str(self.turnCount))
+            elif(self.direction == "R"):
+                self.turn(self.P1, self.P2, self.P3, self.P4)
+
+
+        #print(self.name + "at step :  " + str(self.turnCount))
 
     def stop(self):
         self.isTurning = False

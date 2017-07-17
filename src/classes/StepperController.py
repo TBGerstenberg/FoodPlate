@@ -21,14 +21,16 @@ class StepperController():
         self.stepper1 = Stepper(StepMotorPins1, "FirstMotor", 0.001, "L", 3200)
         self.stepper2 = Stepper(StepMotorPins2, "SecondMotor", 0.001, "L",
                                 3200)
-        pins = self.stepper1.pins + self.stepper2.pins
-        atexit.register(self.cleanup)
 
+    def turn(self, angle, direction):
+
+        print("Rotating for " + str(angle) + "Degrees")
+
+        pins = self.stepper1.pins + self.stepper2.pins
+    
         for pin in pins:
             GPIO.setup(pin, GPIO.OUT)
             GPIO.output(pin, False)
-
-    def turn(self, angle, direction):
 
         turnLimit = self.angleToSteps(angle)
         self.stepper1.turnLimit = turnLimit
@@ -46,6 +48,12 @@ class StepperController():
         motor1Thread.join()
         motor2Thread.join()
 
+        print ("Motors stopped and pins freed up")
+        self.stepper1.stop()
+        self.stepper2.stop()
+
+        GPIO.cleanup()
+
     """ Converts a given angle in euler-angles to a number of steps the two 
 	motors need to turn the FoodPlate for that given angle"""
 
@@ -53,8 +61,4 @@ class StepperController():
         return 8.333333 * angle
 
     def cleanup(self):
-        print ("Motors stopped and pins freed up")
-        self.stepper1.stop()
-        self.stepper2.stop()
-        GPIO.cleanup()
-        exit(0)
+        return

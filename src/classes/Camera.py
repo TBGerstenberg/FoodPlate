@@ -11,11 +11,11 @@ class Camera():
     	self.resolution = resolution
        
     
-    def takeImage(self):
+    def takeImage(self,path):
     	with picamera.PiCamera() as camera:
 			camera.resolution = (1920, 1080)
 			camera.start_preview()
 			sleep(1)
-			camera.capture('/home/pi/Projects/FoodPlate/images/raw_input/input.jpg')
+			camera.capture(path)
 			camera.stop_preview()
 
