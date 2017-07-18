@@ -1,9 +1,10 @@
-import datetime
-import iso8601
+
 
 class FoodPlateItem():
-    
-    def __init__(self, expirationDate = "1970-07-18T12:00:00Z", expirationDateTimestamp = 1342605600, name = "NOT_SET", positionAngle = None, center = None, identifier = None):
+    """
+    Class that represents an item that can be positioned on a foodplate.
+    """
+    def __init__(self, expirationDate="1970-07-18T12:00:00Z", expirationDateTimestamp = 1342605600, name = "NOT_SET", positionAngle = None, center = None, identifier = None):
         
         self.expirationDate = expirationDate
         self.expirationDateTimestamp = expirationDateTimestamp

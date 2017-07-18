@@ -1,3 +1,4 @@
+# Quelle: https://www.codefellows.org/blog/implementing-a-singly-linked-list-in-python/
 class Node(object):
     
     def __init__(self, data=None, next_node=None):

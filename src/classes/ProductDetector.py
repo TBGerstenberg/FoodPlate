@@ -13,7 +13,7 @@ class ProductDetector():
         self.imageReadPath = "/home/pi/Projects/FoodPlate/images/raw_input/"
         self.imageWritePath = "/home/pi/Projects/FoodPlate/images/processed_output/"
         self.foundItems = []
-        self.imageCenter = (830,570)
+        self.imageCenter = (810,570)
         self.original = None
         self.processedImage = None
     
@@ -33,14 +33,16 @@ class ProductDetector():
         # Crop from x, y, w, h -> 100, 200, 300, 400
         image = imageOrig[50:1180, 275:1670]
         # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
-
-        cv2.imwrite(self.imageWritePath + "test.jpg", image)
         
         height, width, depth = image.shape
         
         circle_img = np.zeros((height, width), np.uint8)
         
-        cv2.circle(circle_img, (810,550), 560, 1, thickness=-1)
+        
+        circleMaskPosition = (self.imageCenter[0],self.imageCenter[1]-20)
+        circleMaskDimension = self.imageCenter[1]-20
+        
+        cv2.circle(circle_img, circleMaskPosition, circleMaskDimension, 1, thickness=-1)
        
         masked_data = cv2.bitwise_and(image, image, mask=circle_img)
         
@@ -58,7 +60,7 @@ class ProductDetector():
         
         circle_mask = np.zeros((edged.shape), np.uint8)
         
-        cv2.circle(circle_mask, (810,550), 550, 1, thickness=-1)
+        cv2.circle(circle_mask, circleMaskPosition, circleMaskDimension-20, 1, thickness=-1)
         
         edged = cv2.bitwise_and(edged, edged, mask=circle_mask)
 
@@ -66,16 +68,16 @@ class ProductDetector():
         # pixels
 
         kernel = np.ones((1, 30), np.uint8)
-        erosion = cv2.dilate(edged, kernel, iterations=2)
+        erosion = cv2.dilate(edged, kernel, iterations=3)
 
         cv2.imwrite(self.imageWritePath + "3_dilated.jpg", erosion)
 
         kernel2 = np.ones((1, 30), np.uint8)
-        erosion2 = cv2.erode(erosion, kernel2, iterations=2)
+        erosion2 = cv2.erode(erosion, kernel2, iterations=3)
 
         cv2.imwrite(self.imageWritePath + "4_eroded.jpg", erosion2)
 
-        kernel4 = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 10))
+        kernel4 = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 30))
         closed2 = cv2.morphologyEx(erosion2, cv2.MORPH_CLOSE, kernel4)
 
         cv2.imwrite(self.imageWritePath + "5_closed.jpg", closed2)
@@ -108,6 +110,19 @@ class ProductDetector():
                                             
                                             # return the list of sorted contours and bounding boxes
         return (cnts, boundingBoxes)
+
+    
+    def draw_timestamp(self,image, center, textToPrint):
+        
+        x = center[0]
+        y = center[1]
+
+        # draw the countour number on the image
+        cv2.putText(image, textToPrint, (x+170,y), cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0, (255, 255, 255), 2)
+    
+    def outputDemoImage(self,image):
+        cv2.imwrite(self.imageWritePath + "demo.jpg", image)
     
     def draw_contour(self,image, c, i):
         # compute the center of the contour area and draw a circle
@@ -122,7 +137,10 @@ class ProductDetector():
                     
                     # return the image with the contour number drawn on it
                     
-        cv2.imwrite(self.imageWritePath + "final_output.jpg", image)
+        self.processedImage = cv2.imwrite(self.imageWritePath + "final_output.jpg", image)
+    
+    
+    
     
     def drawItemIds(self,original,image):
         
@@ -146,7 +164,7 @@ class ProductDetector():
             print ("center:" + str(tuple(center)))
 
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(image, '.', self.imageCenter, font, 1, (255, 255, 255), 2)
+            cv2.putText(original, '.', self.imageCenter, font, 1, (255, 255, 255), 2)
         
             radius = int(radius)
 
