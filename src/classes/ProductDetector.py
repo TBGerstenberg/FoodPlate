@@ -12,8 +12,8 @@ class ProductDetector():
 
         self.imageReadPath = "/home/pi/Projects/FoodPlate/images/raw_input/"
         self.imageWritePath = "/home/pi/Projects/FoodPlate/images/processed_output/"
-        self.foundItems = {}
-        self.imageCenter = (795,530)
+        self.foundItems = []
+        self.imageCenter = (830,570)
         self.original = None
         self.processedImage = None
     
@@ -28,42 +28,49 @@ class ProductDetector():
         self.original = imageOrig
         
         # show the images
-        cv2.imwrite(self.imageWritePath + "test.jpg", imageOrig)
         
         
         # Crop from x, y, w, h -> 100, 200, 300, 400
-        image = imageOrig[0:1080, 275:1670]
+        image = imageOrig[50:1180, 275:1670]
         # NOTE: its img[y: y + h, x: x + w] and *not* img[x: x + w, y: y + h]
 
+        cv2.imwrite(self.imageWritePath + "test.jpg", image)
+        
         height, width, depth = image.shape
         
         circle_img = np.zeros((height, width), np.uint8)
         
-        cv2.circle(circle_img, self.imageCenter, 550, 1, thickness=-1)
+        cv2.circle(circle_img, (810,550), 560, 1, thickness=-1)
        
         masked_data = cv2.bitwise_and(image, image, mask=circle_img)
         
-        
-        cv2.rectangle(masked_data, (1350,410), (1297,620), (0,0,0), -1, 8, 0)
-        
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        #cv2.rectangle(masked_data, (1350,410), (1297,620), (0,0,0), -1, 8, 0)
+        #cv2.putText(masked_data, '.', (825,550), font, 1, (255, 255, 255), 2)
 
         cv2.imwrite(self.imageWritePath + "1_masked.jpg", masked_data)
 
         gray = cv2.cvtColor(masked_data, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+        blurred = cv2.GaussianBlur(gray, (5,5), 0)
         edged = self.auto_canny(blurred)
 
         cv2.imwrite(self.imageWritePath + "2_edged.jpg", edged)
+        
+        circle_mask = np.zeros((edged.shape), np.uint8)
+        
+        cv2.circle(circle_mask, (810,550), 550, 1, thickness=-1)
+        
+        edged = cv2.bitwise_and(edged, edged, mask=circle_mask)
 
         # construct and apply a closing kernel to 'close' gaps between 'white'
         # pixels
 
-        kernel = np.ones((1, 8), np.uint8)
+        kernel = np.ones((1, 30), np.uint8)
         erosion = cv2.dilate(edged, kernel, iterations=2)
 
         cv2.imwrite(self.imageWritePath + "3_dilated.jpg", erosion)
 
-        kernel2 = np.ones((1, 8), np.uint8)
+        kernel2 = np.ones((1, 30), np.uint8)
         erosion2 = cv2.erode(erosion, kernel2, iterations=2)
 
         cv2.imwrite(self.imageWritePath + "4_eroded.jpg", erosion2)
@@ -73,11 +80,11 @@ class ProductDetector():
 
         cv2.imwrite(self.imageWritePath + "5_closed.jpg", closed2)
 
-        self.findContours(image,closed2)
+        self.drawItemIds(image,closed2)
     
         self.processedImage = closed2
 
-    def auto_canny(self, image, sigma=0.99):
+    def auto_canny(self, image, sigma=0.33):
 
         # compute the median of the single channel pixel intensities
         v = np.median(image)
@@ -90,71 +97,66 @@ class ProductDetector():
         # return the edged image
         return edged
     
-    def drawNames(self,names):
+    def sort_contours(self,cnts, method="left-to-right"):
+        # initialize the reverse flag and sort index
+        # construct the list of bounding boxes and sort them from top to
+        # bottom
         
-        original = self.original
-        image = self.processedImage
+        boundingBoxes = [cv2.minEnclosingCircle(c) for c in cnts]
+        (cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes),
+                                            key=lambda b:b[1][0], reverse=False))
+                                            
+                                            # return the list of sorted contours and bounding boxes
+        return (cnts, boundingBoxes)
+    
+    def draw_contour(self,image, c, i):
+        # compute the center of the contour area and draw a circle
+        # representing the center
+        M = cv2.moments(c)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
         
-        (cnts, _) = cv2.findContours(image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # draw the countour number on the image
+        cv2.putText(image, "#{}".format(i), (cX - 20, cY), cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0, (255, 255, 255), 2)
+                    
+                    # return the image with the contour number drawn on it
+                    
+        cv2.imwrite(self.imageWritePath + "final_output.jpg", image)
+    
+    def drawItemIds(self,original,image):
         
-        total = 0
-        # loop over the contours
+        (cnts, _) = cv2.findContours(image.copy(), cv2.RETR_EXTERNAL,
+                                          cv2.CHAIN_APPROX_SIMPLE)
+        cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:5]
+                                          
+        # sort the contours according to the provided method
+        (cnts, boundingBoxes) = self.sort_contours(cnts, "left-to-right")
+                                          
+        # loop over the (now sorted) contours and draw them
+                                          
+        id = 0
+                                          
         for c in cnts:
-            
-            # finally, get the min enclosing circle
-            (x, y), radius = cv2.minEnclosingCircle(c)
-            # convert all values to int
-            center = (int(x) + 50, int(y)+ 50)
-            
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            
-            radius = int(radius)
-            
-            if radius < 500 and radius > 30:
-                # and draw the circle in blue
-                if total <= len(names):
-                    cv2.putText(original, names[total], center, font, 1, (255, 255, 255), 2)
-                total += 1
 
-            cv2.imwrite(self.imageWritePath + "named.jpg", original)
-
-
-    def findContours(self,original,image):
-
-        (cnts, _) = cv2.findContours(image.copy(),
-                                     cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        total = 0
-
-        # loop over the contours
-        for c in cnts:
-
-            # finally, get the min enclosing circle
             (x, y), radius = cv2.minEnclosingCircle(c)
             # convert all values to int
             center = (int(x), int(y))
 
-            print "center:" + str(tuple(center))
+            print ("center:" + str(tuple(center)))
 
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(original, '.', self.imageCenter, font, 1, (255, 255, 255), 2)
-
+            cv2.putText(image, '.', self.imageCenter, font, 1, (255, 255, 255), 2)
+        
             radius = int(radius)
 
-            if radius < 500 and radius > 30:
-                # and draw the circle in blue
+            print("radius:" + str(radius))
+
+            if radius < 350 and radius > 50:
                 cv2.circle(original, center, radius, (255, 0, 0), 2)
-                
-                total += 1
-                
-                self.foundItems[str(total)] = center
-                
-                print("radius:" + str(radius))
-        
-        cv2.imwrite(self.imageWritePath + "final_output.jpg", original)
-
+                id += 1
+                self.foundItems.append({"identifier":id,"center":center})
+                self.draw_contour(original, c, id)
         return self.foundItems
-             
-
-
 
 

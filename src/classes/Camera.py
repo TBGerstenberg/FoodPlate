@@ -7,15 +7,16 @@ import cv2
 
 class Camera():
 
-    def __init__(self, resolution=(1920, 1088)):
+    def __init__(self, resolution=(1080, 1080)):
     	self.resolution = resolution
        
     
     def takeImage(self,path):
     	with picamera.PiCamera() as camera:
-			camera.resolution = (1920, 1080)
-			camera.start_preview()
-			sleep(1)
-			camera.capture(path)
-			camera.stop_preview()
+            camera.resolution = (1920, 1380)
+            camera.rotation = 180
+            camera.start_preview()
+            sleep(5)
+            camera.capture(path)
+            camera.stop_preview()
 

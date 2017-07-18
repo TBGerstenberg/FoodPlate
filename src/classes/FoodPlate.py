@@ -2,12 +2,13 @@ import cv2
 from classes.Node import UnorderedList
 from Camera import Camera
 import math
-import cmath
+#import cmath
 from classes.ProductDetector import ProductDetector
 from classes.FoodPlateItem import FoodPlateItem
 from classes.StepperController import StepperController
-from time import sleep
-from math import atan2, degrees, pi
+#from time import sleep
+#from math import atan2, degrees, pi
+
 
 class FoodPlate():
 
@@ -22,7 +23,6 @@ class FoodPlate():
         self.productDetector = ProductDetector()
         self.plateCenter = self.productDetector.imageCenter
         self.stepperController = StepperController()
-        #self.getAngle()
 
     def getItem(self, item):
         self.items.getItem(item)
@@ -41,45 +41,51 @@ class FoodPlate():
 
     def setFoodPlateItems(self):
         """Mock-Method: Create a set of FoodPlateItems and assigns them to the items found on the plate."""
-        itemNames = []
+        products = [
+            {
+                "expirationDate": "2012-07-18T12:00:00Z",
+                "timestamp": 1342605600,
+                "name": "Marmelade"
+            },
+            {
+                "expirationDate": "2009-05-21T12:00:00Z",
+                "timestamp": 1242900000,
+                "name": "Erbsen"
+            },
+            {
+                "expirationDate": "2008-02-21T12:00:00Z",
+                "timestamp": 1203591600,
+                "name": "Champignon"
+            },
+            {
+                "expirationDate": "2007-01-25T12:00:00Z",
+                "timestamp": 1169722800,
+                "name": "Tunfisch"
+            },
+            {
+                "expirationDate": "2013-04-13T12:00:00Z",
+                "timestamp": 1365847200,
+                "name": "GoetterSpeise"
+            }
+        ]
 
-        foodPlateItem1 = FoodPlateItem(
-            "2012-07-18T12:00:00Z", 1342605600, "Marmelade", 0, ())
-        #foodPlateItem2 = FoodPlateItem(
-        #    "2009-05-21T12:00:00Z", 1242900000, "Erbsen", 0, ())
-        #foodPlateItem3 = FoodPlateItem(
-        #    "2008-02-21T12:00:00Z", 1203591600, "Champignon", 0, ())
+        # for each item that has been found, create a FoodPlateItem-Object
+        count = 0
+        for item in self.productDetector.foundItems:
 
-
-        # foodPlateItem4 = FoodPlateItem(
-        #      "2007-01-25T12:00:00Z", 1169722800, "Thunfisch", 0, ())
-        # foodPlateItem5 = FoodPlateItem(
-        #     "2013-04-13T12:00:00Z", 1365847200, "GoetterSpeise", 0, ())
-        # foodPlateItem6 = FoodPlateItem(
-        #    "2011-03-10T12:00:00Z", 1299754800,"Honig", 0, ())
-        # foodPlateItem7 = FoodPlateItem(
-        #     "2011-02-13T12:00:00Z", 1297594800, "Batterie", 0, ())
-
-        for item, value in self.productDetector.foundItems.items():
-            foodPlateItem = eval("foodPlateItem" + str(item))
-            foodPlateItem.setCenter(value)
-            angle = self.getAngle(
+            foodPlateItem = FoodPlateItem()
+            foodPlateItem.identifier = item.get('identifier')
+            foodPlateItem.center = item.get('center')
+            foodPlateItem.positionAngle = self.getAngle(
                 self.plateCenter, foodPlateItem.center)
-
-            print ("Angle of:" + foodPlateItem.name + "is" + str(angle))
-            foodPlateItem.setPositionAngle(angle)
-            itemNames.append(foodPlateItem.name)
-
-        self.productDetector.drawNames(itemNames)
-        self.addItem(foodPlateItem1)
-        #self.addItem(foodPlateItem2)
-        #self.addItem(foodPlateItem3)
-        #self.addItem(foodPlateItem4)
-        #self.addItem(foodPlateItem5)
-        #self.addItem(foodPlateItem6)
-
-        # print(self.items.size())
-        # print(self.items.getItem(2).__dict__)
+            foodPlateItem.name = products[count].get('name')
+            foodPlateItem.expirationDate = products[
+                count].get('expirationDate')
+            foodPlateItem.expirationDateTimestamp = products[
+                count].get('timestamp')
+            count += 1
+            self.addItem(foodPlateItem)
+            print(foodPlateItem.name + "with id : " + str(foodPlateItem.identifier) + "is at :" + str(foodPlateItem.positionAngle))
 
     def bringItemToFront(self):
         """
@@ -93,60 +99,46 @@ class FoodPlate():
         # find the one that expires first
         itemWithEarliestExpiry = self.findNextSpoilingItem()
 
-        print("Item with min expiry date :" + itemWithEarliestExpiry.name)
+        if(itemWithEarliestExpiry is not None):
 
-        # calculate where the item is positioned on the plate
-        angle = itemWithEarliestExpiry.positionAngle
+            print("Item with min expiry date :" + itemWithEarliestExpiry.name)
 
-        # 0 degrees is defined at the backside of the plate
-        # we want the item to be place at the front of the plate
-        # angle += 180
-        turnAngle = 0
-        turnDirection = None
+            # calculate where the item is positioned on the plate
+            angle = itemWithEarliestExpiry.positionAngle
 
-        if angle >= 0 and angle <= 180:
-            turnAngle = 180 - angle
-            turnDirection = "R"          
+            # 0 degrees is defined at the backside of the plate
+            # we want the item to be place at the front of the plate
+            # angle += 180
+            turnAngle = 0
+            turnDirection = None
 
-        elif angle < 0 and angle > -180:
-            turnAngle = 180 - math.fabs(angle)
-            turnDirection = "L"
+            if angle >= 0 and angle <= 180:
+                if angle > 90:
+                    turnAngle = angle - 90
+                    turnDirection = "L"
+                elif angle <= 90:
+                    turnAngle = 90 - angle
+                    turnDirection = "R"
 
+            elif angle < 0 and angle > -180:
+                turnAngle = math.fabs(angle) + 90 
+                turnDirection = "R"
 
-        # if angle > 0 and angle < 90:
-        #     turnAngle = 90 + angle
-        #     turnDirection = "L"
+            print(itemWithEarliestExpiry.name +
+                  "should turn for " + str(turnAngle) + "Degrees")
+            self.rotate(turnAngle, turnDirection)
+            print("Angle between plate center and" +
+                  itemWithEarliestExpiry.name + " is: " + str(angle))
 
-        # elif angle > 90 and angle < 180:
-        #     turnAngle = angle + 90
-        #     turnDirection = "R"
+            # print("FoodPlate sleeping")
+            # sleep(60)
+            # print ("FoodPlate woke up")
+            # self.scanItems()
 
-        # elif angle > -180 and angle < -90:
-        #     turnAngle = math.fabs(angle) - 90
-        #     turnDirection = "L"
+            print("Scan beendet")
 
-        # elif angle > -90 and angle >= 0:
-        #     turnAngle = 90 - math.fabs(angle)
-        #     turnDirection = "L"
-
-        print(itemWithEarliestExpiry.name + "should turn for " + str(turnAngle) + "Degrees")
-        self.rotate(turnAngle,turnDirection)
-
-        # turn the motors to position item on the front of the plate
-        #if angle < 0:
-        #    angle = math.fabs(angle)
-        #    self.rotate(angle, "R")
-        #else:
-        #    self.rotate(angle, "L")
-
-        print("Angle between plate center and" + itemWithEarliestExpiry.name +  " is: " + str(angle))
-
-        # print("FoodPlate sleeping")
-        # sleep(60)
-        # print ("FoodPlate woke up")
-        # self.scanItems()
-
-        print("Scan beendet")
+        else:
+            print ("No Items found")
 
     def scanItems(self):
         """Take an image and searches for products on the plate."""
@@ -168,27 +160,16 @@ class FoodPlate():
         for item in self.items:
 
                 # update item coordinate after a rotation of <angle> degrees
-            item.coordinates = self.rotatePoint2D(self.center, item.center, angle)
+            item.coordinates = self.rotatePoint2D(
+                self.center, item.center, angle)
 
             # update position measured in DEG
             item.position = item.position + angle
 
-
-    # def getItemPosition(self, plateCenter, itemCenter):
-    #     """Calculates the position of an item in degrees, measured counter clockwise."""
-
-    #     plateCenterPhase = cmath.phase(
-    #         complex(plateCenter[0], plateCenter[1]))
-    #     itemCenterPhase = cmath.phase(complex(itemCenter[0], itemCenter[1]))
-
-    #     angle = (plateCenterPhase - itemCenterPhase) * 180 / cmath.pi
-
-    #     return angle
-
     def rotatePoint2D(self, centerPoint, point, angle):
         """Rotates a point around a given center in 2D space"""
 
-        #Rotates a point around another centerPoint. Angle is in degrees. 
+        # Rotates a point around another centerPoint. Angle is in degrees.
         #Rotation is counter-clockwise
         angle = math.radians(angle)
 
@@ -214,7 +195,7 @@ class FoodPlate():
         EXPIRY_DATE_IN_100_YEARS = 4638898800000
         minExpiryDate = EXPIRY_DATE_IN_100_YEARS
         size = self.items.size()
-        count = 0 
+        count = 0
         minItem = None
 
         while count < size:
@@ -226,7 +207,6 @@ class FoodPlate():
                 minItem = self.items.getItem(count)
 
             count += 1
-            # print(count)
 
         return minItem
 
@@ -237,12 +217,11 @@ class FoodPlate():
 
         self.stepperController.turn(angle, direction)
 
-    def getAngle(self,plateCenter,itemCenter):
+    def getAngle(self, plateCenter, itemCenter):
 
         dx = itemCenter[0] - plateCenter[0]
         dy = itemCenter[1] - plateCenter[1]
 
         angle = math.atan2(dy, dx) * 180 / math.pi
 
-        
         return angle
