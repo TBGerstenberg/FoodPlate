@@ -1,8 +1,6 @@
 ##First Prototype for FoodPlate##
 
-(private) Trello Board for the feature planning of this system: 
-https://trello.com/b/tswBQZp8/foodplate
+Foodplate is a system developed in a semester-long project at TH Köln. Foodplate allows users to be reminded of the consumption of the food they store in their fridge before they expire. 
 
-tesseract usage instructions: 
-https://gist.github.com/henrik/1967035
+
 
